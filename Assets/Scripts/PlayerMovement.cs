@@ -1,3 +1,4 @@
+using UnityEditor.Tilemaps;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -5,7 +6,12 @@ public class PlayerMovement : MonoBehaviour
     // ==========================================
     // 1. COMPONENTES Y VARIABLES DE REFERENCIA
     // ==========================================
-    private Rigidbody2D rb;
+    public Rigidbody2D rb;
+    public Animator anim;
+
+    [SerializeField]
+    private bool isFacingRight = true;
+
 
     [Header("Movimiento Horizontal")]
     [Tooltip("Velocidad de desplazamiento lateral del personaje.")]
@@ -35,7 +41,7 @@ public class PlayerMovement : MonoBehaviour
     public float checkRadius = 0.2f;
     [Tooltip("Capa asignada para identificar las superficies del piso.")]
     public LayerMask groundLayer;
-    private bool isGrounded;
+    public bool isGrounded;
 
     // Velocidad vertical interna calculada por el script
     private float verticalVelocity;
@@ -61,8 +67,19 @@ public class PlayerMovement : MonoBehaviour
         float moveInput = Input.GetAxisRaw("Horizontal");
         float horizontalVelocity = moveInput * moveSpeed;
 
-        // B. Comprobar Detección de Suelo
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
+        if(rb.linearVelocityX > 0f && isFacingRight)
+        {
+            Flip();
+        }
+        else if (rb.linearVelocityX < 0 && !isFacingRight)
+        {
+            Flip();
+        }
+
+        AnimatorController();
+
+            // B. Comprobar Detección de Suelo
+            isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
 
         // C. Actualizar Temporizador de Coyote Time
         if (isGrounded)
@@ -111,6 +128,8 @@ public class PlayerMovement : MonoBehaviour
 
         // G. Aplicar velocidad final al Rigidbody2D (Optimizado para Unity 6 con linearVelocity)
         rb.linearVelocity = new Vector2(horizontalVelocity, verticalVelocity);
+
+      
     }
 
     // ==========================================
@@ -125,4 +144,22 @@ public class PlayerMovement : MonoBehaviour
             Gizmos.DrawWireSphere(groundCheck.position, checkRadius);
         }
     }
+
+    private void Flip()
+    {
+        isFacingRight = !isFacingRight;
+        transform.Rotate(0, 180, 0);
+    }
+
+    private void AnimatorController()
+    {
+        bool isMoving = rb.linearVelocityX != 0;
+        bool isFalling = verticalVelocity < 0;
+        bool isJumping = verticalVelocity > 1;
+        anim.SetBool("isMoving", isMoving);
+        anim.SetBool("isFalling", isFalling);
+        anim.SetBool("isJumping", isJumping);
+        anim.SetBool("isGrounded", isGrounded);
+    }
+
 }
