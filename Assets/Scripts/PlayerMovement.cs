@@ -67,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
         float moveInput = Input.GetAxisRaw("Horizontal");
         float horizontalVelocity = moveInput * moveSpeed;
 
+        //Flip
         if(rb.linearVelocityX > 0f && isFacingRight)
         {
             Flip();
